@@ -4,8 +4,7 @@ from bson import ObjectId
 
 
 # Conexión a MongoDB
-client = MongoClient('mongodb+srv://jimcostdev:fil4:13adv7dia_josue1:9@jimcostdev.2wwaqpz.mongodb.net/?retryWrites=true&w=majority') 
-#client = MongoClient('mongodb://localhost:27017/') 
+client = MongoClient('mongodb://localhost:27017/') 
 db = client['api_menu_db']  
 
 # Colecciones en la base de datos
