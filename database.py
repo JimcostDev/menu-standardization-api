@@ -1,13 +1,10 @@
 from pymongo import MongoClient
 from models import Product, Category
 from bson import ObjectId
-import os
 
-# Obtiene la cadena de conexión desde las variables de entorno
-mongo_uri = os.getenv("MONGO_URI")
 
 # Conexión a MongoDB
-client = MongoClient(mongo_uri) 
+client = MongoClient('mongodb+srv://jimcostdev:fil4:13adv7dia_josue1:9@jimcostdev.2wwaqpz.mongodb.net/?retryWrites=true&w=majority') 
 #client = MongoClient('mongodb://localhost:27017/') 
 db = client['api_menu_db']  
 
