@@ -179,6 +179,8 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+# Ignorar la carpeta del entorno virtual
+menu/
 
 # Spyder project settings
 .spyderproject
@@ -239,5 +241,3 @@ $RECYCLE.BIN/
 
 # End of https://www.toptal.com/developers/gitignore/api/windows,linux,macos,python
 
-# Ignorar la carpeta del entorno virtual
-menu/
