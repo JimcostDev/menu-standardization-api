@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from typing import List
 from models import Product, Category
 import database
@@ -39,14 +39,34 @@ def create_product(product: Product):
 # Eliminar un producto
 @app.delete("/products/{product_id}")
 def delete_product(product_id: str):
-    database.delete_product(product_id)
-    return {"message": "Product deleted"}
+    deleted = database.delete_product(product_id)
+    if deleted:
+        return {"message": "Product deleted"}
+    raise HTTPException(status_code=404, detail="Product not found")
+
+# Eliminar una categoría
+@app.delete("/categories/{category_id}")
+def delete_category(category_id: str):
+    deleted = database.delete_category(category_id)
+    if deleted:
+        return {"message": "Category deleted"}
+    raise HTTPException(status_code=404, detail="Category not found")
+
+# Actualizar una categoría
+@app.put("/categories/{category_id}")
+def update_category(category_id: str, category: Category):
+    updated = database.update_category(category_id, category)
+    if updated:
+        return {"message": "Category updated"}
+    raise HTTPException(status_code=404, detail="Category not found")
 
 # Actualizar un producto
 @app.put("/products/{product_id}")
 def update_product(product_id: str, product: Product):
-    database.update_product(product_id, product)
-    return {"message": "Product updated"}
+    updated = database.update_product(product_id, product)
+    if updated:
+        return {"message": "Product updated"}
+    raise HTTPException(status_code=404, detail="Product not found")
 
 if __name__ == "__main__":
     import uvicorn

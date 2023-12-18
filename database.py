@@ -39,6 +39,14 @@ def create_product(product: Product):
 
 def delete_product(product_id: str):
     products_collection.delete_one({"_id": ObjectId(product_id)})
+    
+def delete_category(category_id: str):
+    categories_collection.delete_one({"_id": ObjectId(category_id)})
 
 def update_product(product_id: str, updated_product: Product):
     products_collection.update_one({"_id": ObjectId(product_id)}, {"$set": updated_product.dict()})
+    
+def update_category(category_id: str, updated_category: Category):
+    updated_data = updated_category.dict(exclude_unset=True)  # Evita actualizar campos vacíos
+    categories_collection.update_one({"_id": ObjectId(category_id)}, {"$set": updated_data})
+
