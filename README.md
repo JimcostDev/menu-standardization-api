@@ -4,7 +4,7 @@ Este proyecto se enfoca en desarrollar una API que permita la estandarización d
 
 ## Características
 
-- **ListManejo de Productos**: Operaciones para administrar productos, incluyendo la creación, actualización, eliminación y visualización de detalles como nombre, descripción, etiquetas (vegano, gluten free, picante), precio, entre otros.
+- **Manejo de Categorías y Productos**: Operaciones para administrar categorías y productos, incluyendo la creación, actualización, eliminación y visualización de detalles como nombre, descripción, etiquetas (vegano, gluten free, picante), precio, entre otros.
 
 - **Flexibilidad de Personalización:** Facilidad para añadir etiquetas personalizadas a los productos para una mejor clasificación (etiquetas especiales, alérgenos, etc.).
 
