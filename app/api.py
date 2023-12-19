@@ -1,8 +1,8 @@
 from fastapi import APIRouter, HTTPException, Path
 from typing import List
-from app.models import Product, Category
-from app import database
-from app.utils import is_valid_object_id
+from models import Product, Category
+import database
+from utils import is_valid_object_id
 
 router = APIRouter()
 
@@ -30,7 +30,6 @@ def read_product(product_id: str = Path(..., title="The ID of the product to get
     product = database.get_product_by_id(product_id)
     if product is None:
         raise HTTPException(status_code=404, detail="Product not found")
-
     return product
 
 # Consultar por id de categoría
@@ -42,7 +41,6 @@ def read_category(category_id: str = Path(..., title="The ID of the category to 
     category = database.get_category_by_id(category_id)
     if category is None:
         raise HTTPException(status_code=404, detail="Category not found")
-
     return category
 
 
@@ -84,6 +82,9 @@ def delete_category(category_id: str):
 # Actualizar una categoría
 @router.put("/categories/{category_id}")
 def update_category(category_id: str, category: Category):
+    if not is_valid_object_id(category_id):
+        raise HTTPException(status_code=400, detail="Invalid category ID")
+    
     updated = database.update_category(category_id, category)
     if updated:
         return {"message": "Category updated"}
@@ -92,6 +93,9 @@ def update_category(category_id: str, category: Category):
 # Actualizar un producto
 @router.put("/products/{product_id}")
 def update_product(product_id: str, product: Product):
+    if not is_valid_object_id(product_id):
+        raise HTTPException(status_code=400, detail="Invalid product ID")
+    
     updated = database.update_product(product_id, product)
     if updated:
         return {"message": "Product updated"}

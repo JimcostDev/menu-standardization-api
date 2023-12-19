@@ -1,7 +1,7 @@
 from pymongo import MongoClient
-from app.models import Product, Category
+from models import Product, Category
 from bson import ObjectId
-from app.utils import is_valid_object_id
+from utils import is_valid_object_id
 from fastapi import HTTPException
 import os
 
