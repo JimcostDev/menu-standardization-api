@@ -18,7 +18,7 @@ Este proyecto se enfoca en desarrollar una API que permita la estandarización d
 ## Instalación
 
 1. Clona este repositorio: `git clone`
-2. Activa tu entorno virtual:  `source venv/Scripts/activate`
+2. Crea tu entorno virtual `python -m venv venv` y activalo :  `source venv/Scripts/activate`
 3. Instala las dependencias usando `pip install -r requirements.txt`.
 4. Configura la base de datos MongoDB (colecciones: categories y products)
 5. `cd app`
