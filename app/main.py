@@ -4,6 +4,10 @@ from api import router as api_router
 
 app = FastAPI()
 
+@app.get("/")
+def read_root():
+    return {"message": "Hello, world!"}
+
 # Agregar la ruta para servir archivos estáticos, incluido el favicon
 app.mount("/static", StaticFiles(directory="assets"), name="static")
 
