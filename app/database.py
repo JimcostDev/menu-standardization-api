@@ -6,13 +6,13 @@ from fastapi import HTTPException
 import os
 from dotenv import load_dotenv
 
-# Obtiene la cadena de conexión desde las variables de entorno
+# Obtiene la cadena de conexión desde config.env
 load_dotenv("config.env")
 mongo_uri = os.getenv("MONGO_URI")
 
 # Conexión a MongoDB
-# client = MongoClient(mongo_uri)
-client = MongoClient('mongodb://localhost:27017/')
+client = MongoClient(mongo_uri)
+#client = MongoClient('mongodb://localhost:27017/')
 db = client['api_menu_db']
 
 # Colecciones en la base de datos
