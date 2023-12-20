@@ -4,8 +4,10 @@ from bson import ObjectId
 from utils import is_valid_object_id
 from fastapi import HTTPException
 import os
+from dotenv import load_dotenv
 
 # Obtiene la cadena de conexión desde las variables de entorno
+load_dotenv("config.env")
 mongo_uri = os.getenv("MONGO_URI")
 
 # Conexión a MongoDB
