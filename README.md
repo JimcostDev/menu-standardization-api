@@ -17,10 +17,12 @@ Este proyecto se enfoca en desarrollar una API que permita la estandarización d
 
 ## Instalación
 
-1. Clona este repositorio.
-2. Instala las dependencias usando `pip install -r requirements.txt`.
-3. Configura la base de datos MongoDB.
-4. Ejecuta la aplicación usando `uvicorn main:app --reload`.
+1. Clona este repositorio: `git clone`
+2. Activa tu entorno virtual:  `source venv/Scripts/activate`
+3. Instala las dependencias usando `pip install -r requirements.txt`.
+4. Configura la base de datos MongoDB (colecciones: categories y products)
+5. `cd app`
+6. Ejecuta la aplicación usando `uvicorn main:app --reload`.
 
 ## Uso
 
@@ -34,9 +36,11 @@ Este proyecto se enfoca en desarrollar una API que permita la estandarización d
 - `/categories/{category_name}/products`: Obtener productos por categoría.
 - `/products`: Obtener todos los productos.
 - `/products/{product_id}`: Obtener producto por ID.
+- `/categories/{category_id}`: Obtener categoria por ID.
 - `/categories/`: Crear una nueva categoría.
 - `/products/`: Crear un nuevo producto.
 - `/products/{product_id}`: Eliminar o actualizar un producto por ID.
+- `/categories/{category_id}`: Eliminar o actualizar una categoria por ID.
 
 ## Contribución
 
