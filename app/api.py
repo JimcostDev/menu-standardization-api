@@ -81,8 +81,21 @@ def read_category(category_id: str = Path(..., title="The ID of the category to 
                 "Tras la creación exitosa, retorna un mensaje confirmando que la categoría ha sido creada."
 )
 def create_category(category: Category):
-    database.create_category(category)
-    return {"message": "Category created"}
+    # Realiza la validación de los campos requeridos
+    if not category.name:
+        raise HTTPException(status_code=400, detail="Name required")
+    
+    # Validación adicional, como verificar la unicidad del nombre de categoría
+    if database.category_exists(category.name):
+        raise HTTPException(status_code=400, detail="Category already exists")
+
+    # Crear categoría y manejar posibles errores
+    try:
+        created_category = database.create_category(category)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+    return {"message": "Category created", "category": created_category}
 
 # Crear un producto
 @router.post(
@@ -94,8 +107,68 @@ def create_category(category: Category):
                 "Después de crear el producto con éxito, se devuelve un mensaje confirmando la creación."
 )
 def create_product(product: Product):
-    database.create_product(product)
-    return {"message": "Product created"}
+    # Realiza la validación de los campos requeridos
+    if not product.name or not product.description or not product.category or not product.tags or not product.price:
+        raise HTTPException(status_code=400, detail="All fields are required")
+    
+    # Validación adicional, como verificar la unicidad del nombre de categoría
+    if database.product_exists(product.name):
+        raise HTTPException(status_code=400, detail="Product already exists")
+
+    # Crear producto y manejar posibles errores
+    try:
+        created_product = database.create_product(product)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+    return {"message": "Product created", "product": created_product}
+
+
+# Actualizar una categoría
+@router.put(
+    "/categories/{category_id}",
+    summary="Actualizar una categoría",
+    description="Este endpoint actualiza los detalles de una categoría existente en la base de datos, "
+                "identificada por su ID. El ID de la categoría debe ser proporcionado en la URL y los nuevos "
+                "detalles de la categoría en el cuerpo de la solicitud. Si la actualización es exitosa, retorna "
+                "un mensaje de confirmación. En caso de que el ID no sea válido o la categoría no se encuentre, "
+                "se retornará un error."
+)
+def update_category(category_id: str, category: Category):
+    if not is_valid_object_id(category_id):
+        raise HTTPException(status_code=400, detail="Invalid category ID")
+    
+    # Realiza la validación de los campos requeridos
+    if not category.name:
+        raise HTTPException(status_code=400, detail="Name required")
+    
+    updated = database.update_category(category_id, category)
+    if updated:
+        return {"message": "Category updated"}
+    raise HTTPException(status_code=404, detail="Category not found")
+
+# Actualizar un producto
+@router.put(
+    "/products/{product_id}",
+    summary="Actualizar un producto",
+    description="Este endpoint actualiza los detalles de un producto existente en la base de datos, "
+                "identificado por su ID. El ID del producto debe ser proporcionado en la URL y los nuevos "
+                "detalles del producto en el cuerpo de la solicitud. Si la actualización es exitosa, retorna "
+                "un mensaje de confirmación. En caso de que el ID no sea válido o el producto no se encuentre, "
+                "se retornará un error."
+)
+def update_product(product_id: str, product: Product):
+    if not is_valid_object_id(product_id):
+        raise HTTPException(status_code=400, detail="Invalid product ID")
+    
+    # Realiza la validación de los campos requeridos
+    if not product.name or not product.description or not product.category or not product.tags or not product.price:
+        raise HTTPException(status_code=400, detail="All fields are required")
+    
+    updated = database.update_product(product_id, product)
+    if updated:
+        return {"message": "Product updated"}
+    raise HTTPException(status_code=404, detail="Product not found")
 
 # Eliminar un producto
 @router.delete(
@@ -132,42 +205,3 @@ def delete_category(category_id: str):
     if deleted.get("message") == "Category deleted":
         return deleted
     raise HTTPException(status_code=404, detail="Category not found")
-
-
-# Actualizar una categoría
-@router.put(
-    "/categories/{category_id}",
-    summary="Actualizar una categoría",
-    description="Este endpoint actualiza los detalles de una categoría existente en la base de datos, "
-                "identificada por su ID. El ID de la categoría debe ser proporcionado en la URL y los nuevos "
-                "detalles de la categoría en el cuerpo de la solicitud. Si la actualización es exitosa, retorna "
-                "un mensaje de confirmación. En caso de que el ID no sea válido o la categoría no se encuentre, "
-                "se retornará un error."
-)
-def update_category(category_id: str, category: Category):
-    if not is_valid_object_id(category_id):
-        raise HTTPException(status_code=400, detail="Invalid category ID")
-    
-    updated = database.update_category(category_id, category)
-    if updated:
-        return {"message": "Category updated"}
-    raise HTTPException(status_code=404, detail="Category not found")
-
-# Actualizar un producto
-@router.put(
-    "/products/{product_id}",
-    summary="Actualizar un producto",
-    description="Este endpoint actualiza los detalles de un producto existente en la base de datos, "
-                "identificado por su ID. El ID del producto debe ser proporcionado en la URL y los nuevos "
-                "detalles del producto en el cuerpo de la solicitud. Si la actualización es exitosa, retorna "
-                "un mensaje de confirmación. En caso de que el ID no sea válido o el producto no se encuentre, "
-                "se retornará un error."
-)
-def update_product(product_id: str, product: Product):
-    if not is_valid_object_id(product_id):
-        raise HTTPException(status_code=400, detail="Invalid product ID")
-    
-    updated = database.update_product(product_id, product)
-    if updated:
-        return {"message": "Product updated"}
-    raise HTTPException(status_code=404, detail="Product not found")

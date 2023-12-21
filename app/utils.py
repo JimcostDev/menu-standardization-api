@@ -1,5 +1,6 @@
 from bson import ObjectId
 
+
 # Verificar si un ID dado es un ObjectId válido en MongoDB
 def is_valid_object_id(id_to_check: str) -> bool:
     try:

@@ -1,12 +1,18 @@
 from pydantic import BaseModel, Field, constr, validator
 from typing import List
 
+
 class Product(BaseModel):
-    name: constr(min_length=1, max_length=100) = Field(..., description="El nombre del producto.")
-    description: constr(min_length=1, max_length=300) = Field(..., description="Una breve descripción del producto.")
-    category: constr(min_length=1, max_length=100) = Field(..., description="La categoría a la que pertenece el producto.")
-    tags: List[str] = Field(..., description="Etiquetas asociadas al producto, como 'vegano', 'sin gluten', etc.")
-    price: float = Field(..., gt=0, description="El precio del producto, debe ser mayor que 0.")
+    name: constr(min_length=1, max_length=100) = Field(...,
+                                                       description="El nombre del producto.")
+    description: constr(min_length=1, max_length=300) = Field(...,
+                                                              description="Una breve descripción del producto.")
+    category: constr(min_length=1, max_length=100) = Field(...,
+                                                           description="La categoría a la que pertenece el producto.")
+    tags: List[str] = Field(
+        ..., description="Etiquetas asociadas al producto, como 'vegano', 'sin gluten', etc.")
+    price: float = Field(..., gt=0,
+                         description="El precio del producto, debe ser mayor que 0.")
 
     @validator('tags')
     def validate_tags(cls, v):
@@ -27,7 +33,8 @@ class Product(BaseModel):
 
 
 class Category(BaseModel):
-    name: constr(min_length=1, max_length=100) = Field(..., description="El nombre de la categoría.")
+    name: constr(min_length=1, max_length=100) = Field(...,
+                                                       description="El nombre de la categoría.")
 
     class Config:
         schema_extra = {

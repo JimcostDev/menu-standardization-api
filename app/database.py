@@ -1,4 +1,5 @@
-from pymongo import MongoClient
+from pymongo import MongoClient, TEXT
+from pymongo.errors import PyMongoError
 from models import Product, Category
 from bson import ObjectId
 from utils import is_valid_object_id
@@ -21,6 +22,19 @@ categories_collection = db['categories']
 
 # Operaciones en la base de datos
 
+# Crear un índice de texto en los campos 'name' de las colecciones para consultas insensibles a mayúsculas/minúsculas
+categories_collection.create_index([("name", TEXT)])
+products_collection.create_index([("name", TEXT)])
+
+# Verificar si categoria existe (insensible a mayúsculas/minúsculas)
+def category_exists(category_name: str) -> bool:
+    existing_category = categories_collection.find_one({"name": {"$regex": f"^{category_name}$", "$options": "i"}})
+    return existing_category is not None
+
+# Verificar si producto existe (insensible a mayúsculas/minúsculas)
+def product_exists(product_name: str) -> bool:
+    existing_product = products_collection.find_one({"name": {"$regex": f"^{product_name}$", "$options": "i"}})
+    return existing_product is not None
 
 def get_categories() -> list:
     return list(categories_collection.find({}, {"_id": 0}))
@@ -52,12 +66,37 @@ def get_category_by_id(category_id: str) -> dict:
 
 def create_category(category: Category):
     new_category = category.dict()
-    categories_collection.insert_one(new_category)
+    try:
+        # Verificar si la categoría ya existe
+        if categories_collection.find_one({"name": new_category["name"]}):
+            return None  # O manejar como prefieras
+
+        result = categories_collection.insert_one(new_category)
+        new_category_id = result.inserted_id
+        new_category["_id"] = str(new_category_id)  # Convierte ObjectId a String
+        return new_category  # Devuelve la categoría creada, incluyendo su ID como String
+    except PyMongoError as e:
+        # Manejar la excepción de MongoDB
+        print(f"Error al insertar categoría: {e}")
+        return None
+
 
 
 def create_product(product: Product):
     new_product = product.dict()
-    products_collection.insert_one(new_product)
+    try:
+        # Verificar si producto ya existe
+        if products_collection.find_one({"name": new_product["name"]}):
+            return None  # O manejar como prefieras
+
+        result = products_collection.insert_one(new_product)
+        new_product_id = result.inserted_id
+        new_product["_id"] = str(new_product_id)  # Convierte ObjectId a String
+        return new_product  # Devuelve producto creada, incluyendo su ID como String
+    except PyMongoError as e:
+        # Manejar la excepción de MongoDB
+        print(f"Error al insertar categoría: {e}")
+        return None
 
 
 def update_product(product_id: str, updated_product: Product):
