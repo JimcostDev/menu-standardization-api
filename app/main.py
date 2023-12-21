@@ -6,7 +6,7 @@ app = FastAPI()
 
 @app.get("/")
 def read_root():
-    return {"message": "Hello, world!"}
+    return {"message": "Hola Mundo!"}
 
 # Agregar la ruta para servir archivos estáticos, incluido el favicon
 app.mount("/static", StaticFiles(directory="assets"), name="static")

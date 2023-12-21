@@ -14,12 +14,12 @@ def read_categories():
     return database.get_categories()
 
 
-@router.get("/categories/{category_name}/products/", response_model=List[Product],
+@router.get("/categories/{category_id}/products/", response_model=List[Product],
             summary="Obtener productos por categoría",
             description="Devuelve todos los productos pertenecientes a una categoría específica. "
-                        "La categoría se especifica por su nombre.")
-def read_category_products(category_name: str):
-    return database.get_category_products(category_name)
+                        "La categoría se especifica por su ID.")
+def read_category_products(category_id: str):
+    return database.get_category_products(category_id)
 
 # Consultar los productos
 @router.get(
@@ -108,7 +108,7 @@ def create_category(category: Category):
 )
 def create_product(product: Product):
     # Realiza la validación de los campos requeridos
-    if not product.name or not product.description or not product.category or not product.tags or not product.price:
+    if not product.name or not product.description or not product.category_id or not product.tags or not product.price:
         raise HTTPException(status_code=400, detail="All fields are required")
     
     # Validación adicional, como verificar la unicidad del nombre de categoría
@@ -162,7 +162,7 @@ def update_product(product_id: str, product: Product):
         raise HTTPException(status_code=400, detail="Invalid product ID")
     
     # Realiza la validación de los campos requeridos
-    if not product.name or not product.description or not product.category or not product.tags or not product.price:
+    if not product.name or not product.description or not product.category_id or not product.tags or not product.price:
         raise HTTPException(status_code=400, detail="All fields are required")
     
     updated = database.update_product(product_id, product)
@@ -200,6 +200,10 @@ def delete_product(product_id: str):
 def delete_category(category_id: str):
     if not is_valid_object_id(category_id):
         raise HTTPException(status_code=400, detail="Invalid category ID")
+    
+    # Verificar si la categoría tiene productos asociados
+    if database.category_has_products(category_id):
+        raise HTTPException(status_code=422, detail="Category has associated products. Delete products first.")
 
     deleted = database.delete_category(category_id)
     if deleted.get("message") == "Category deleted":

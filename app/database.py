@@ -36,17 +36,22 @@ def product_exists(product_name: str) -> bool:
     existing_product = products_collection.find_one({"name": {"$regex": f"^{product_name}$", "$options": "i"}})
     return existing_product is not None
 
+# Verificar si la categoría tiene productos asociados
+def category_has_products(category_id: str) -> bool:
+    # Verificar si hay productos asociados a la categoría
+    result = products_collection.find_one({"category_id": category_id})
+    return result is not None
+
+# ***************** CRUD ************* #
+# GETS
 def get_categories() -> list:
     return list(categories_collection.find({}, {"_id": 0}))
 
-
-def get_category_products(category_name: str) -> list:
-    return list(products_collection.find({"category": category_name}, {"_id": 0}))
-
+def get_category_products(category_id: str) -> list:
+    return list(products_collection.find({"category_id": category_id}, {"_id": 0}))
 
 def get_products() -> list:
     return list(products_collection.find({}, {"_id": 0}))
-
 
 def get_product_by_id(product_id: str) -> dict:
     product = products_collection.find_one(
@@ -55,7 +60,6 @@ def get_product_by_id(product_id: str) -> dict:
         return product
     return None  # Opcional: también puedes devolver un objeto vacío o lanzar una excepción
 
-
 def get_category_by_id(category_id: str) -> dict:
     category = categories_collection.find_one(
         {"_id": ObjectId(category_id)}, {"_id": 0})
@@ -63,7 +67,7 @@ def get_category_by_id(category_id: str) -> dict:
         return category
     return None  # Opcional: también puedes devolver un objeto vacío o lanzar una excepción
 
-
+# CREATES
 def create_category(category: Category):
     new_category = category.dict()
     try:
@@ -80,14 +84,13 @@ def create_category(category: Category):
         print(f"Error al insertar categoría: {e}")
         return None
 
-
-
 def create_product(product: Product):
     new_product = product.dict()
     try:
         # Verificar si producto ya existe
         if products_collection.find_one({"name": new_product["name"]}):
             return None  # O manejar como prefieras
+        
 
         result = products_collection.insert_one(new_product)
         new_product_id = result.inserted_id
@@ -98,7 +101,7 @@ def create_product(product: Product):
         print(f"Error al insertar categoría: {e}")
         return None
 
-
+# UPDATES
 def update_product(product_id: str, updated_product: Product):
     updated_data = updated_product.dict(
         exclude_unset=True)  # Excluye campos vacíos
@@ -111,7 +114,6 @@ def update_product(product_id: str, updated_product: Product):
     else:
         raise HTTPException(status_code=422, detail="Update operation failed")
 
-
 def update_category(category_id: str, updated_category: Category):
     updated_data = updated_category.dict(exclude_unset=True)
     result = categories_collection.update_one(
@@ -123,7 +125,7 @@ def update_category(category_id: str, updated_category: Category):
     else:
         raise HTTPException(status_code=422, detail="Update operation failed")
 
-
+# DELETES
 def delete_category(category_id: str):
     if not is_valid_object_id(category_id):
         raise HTTPException(status_code=400, detail="Invalid category ID")
@@ -136,7 +138,6 @@ def delete_category(category_id: str):
     else:
         raise HTTPException(
             status_code=422, detail="Deletion operation failed")
-
 
 def delete_product(product_id: str):
     if not is_valid_object_id(product_id):
