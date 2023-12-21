@@ -33,7 +33,7 @@ Este proyecto se enfoca en desarrollar una API que permita la estandarización d
 ## Endpoints
 
 - `/categories`: Obtener todas las categorías.
-- `/categories/{category_name}/products`: Obtener productos por categoría.
+- `/categories/{category_id}/products`: Obtener productos por categoría.
 - `/products`: Obtener todos los productos.
 - `/products/{product_id}`: Obtener producto por ID.
 - `/categories/{category_id}`: Obtener categoria por ID.
