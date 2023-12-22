@@ -110,9 +110,7 @@ def create_product(product: Product):
         return None
 
 # UPDATES
-def update_product(product_id: str, updated_product: Product):
-    updated_data = updated_product.dict(
-        exclude_unset=True)  # Excluye campos vacíos
+def update_product(product_id: str, updated_data: dict):
     result = products_collection.update_one(
         {"_id": ObjectId(product_id)}, {"$set": updated_data})
     if result.modified_count > 0:
@@ -121,6 +119,7 @@ def update_product(product_id: str, updated_product: Product):
         raise HTTPException(status_code=404, detail="Product not found")
     else:
         raise HTTPException(status_code=422, detail="Update operation failed")
+
 
 def update_category(category_id: str, updated_category: Category):
     updated_data = updated_category.dict(exclude_unset=True)

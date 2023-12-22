@@ -29,6 +29,7 @@ def read_category_products(category_id: str):
     description="Este endpoint devuelve una lista de todos los productos disponibles en la base de datos. "
                 "Cada producto incluye detalles como nombre, descripción, categoría, etiquetas y precio. "
                 "Es útil para obtener una vista general de todos los productos ofrecidos."
+                "Ejemplo de solicitud con paginacón: ```products/?page=1&page_size=10```"
 )
 def read_products(page: int = Query(1, description="Número de página", ge=1), 
                   page_size: int = Query(10, description="Tamaño de página", ge=1, le=100)):
@@ -152,24 +153,34 @@ def update_category(category_id: str, category: Category):
 @router.put(
     "/products/{product_id}",
     summary="Actualizar un producto",
-    description="Este endpoint actualiza los detalles de un producto existente en la base de datos, "
-                "identificado por su ID. El ID del producto debe ser proporcionado en la URL y los nuevos "
-                "detalles del producto en el cuerpo de la solicitud. Si la actualización es exitosa, retorna "
+    description="Este endpoint permite realizar actualizaciones en un producto existente en la base de datos, "
+                "identificado por su ID. El ID del producto debe ser proporcionado en la URL. Puedes enviar un "
+                "objeto JSON en el cuerpo de la solicitud con los campos que deseas actualizar. Los campos no "
+                "proporcionados en la solicitud permanecerán sin cambios. Si la actualización es exitosa, retorna "
                 "un mensaje de confirmación. En caso de que el ID no sea válido o el producto no se encuentre, "
-                "se retornará un error."
+                "se retornará un error.\n\n"
+                "Ejemplo de solicitud JSON para actualizar solo el nombre y el precio de un producto:\n"
+                "```json\n"
+                "{\n"
+                "  \"name\": \"Nuevo Nombre\",\n"
+                "  \"price\": 14.99\n"
+                "}\n"
+                "```\n"
+                "Esto actualizará solo el nombre y el precio del producto sin afectar otros campos."
 )
-def update_product(product_id: str, product: Product):
+def update_product(product_id: str, updated_fields: dict):
     if not is_valid_object_id(product_id):
         raise HTTPException(status_code=400, detail="Invalid product ID")
     
-    # Realiza la validación de los campos requeridos
-    if not product.name or not product.description or not product.category_id or not product.tags or not product.price:
-        raise HTTPException(status_code=400, detail="All fields are required")
+    # Verificar que se proporcionaron campos para actualizar
+    if not updated_fields:
+        raise HTTPException(status_code=400, detail="No fields to update provided")
     
-    updated = database.update_product(product_id, product)
+    updated = database.update_product(product_id, updated_fields)
     if updated:
         return {"message": "Product updated"}
     raise HTTPException(status_code=404, detail="Product not found")
+
 
 # Eliminar un producto
 @router.delete(
