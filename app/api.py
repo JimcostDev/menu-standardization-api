@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Path
+from fastapi import APIRouter, HTTPException, Path, Query
 from typing import List
 from models import Product, Category
 import database
@@ -30,8 +30,9 @@ def read_category_products(category_id: str):
                 "Cada producto incluye detalles como nombre, descripción, categoría, etiquetas y precio. "
                 "Es útil para obtener una vista general de todos los productos ofrecidos."
 )
-def read_products():
-    return database.get_products()
+def read_products(page: int = Query(1, description="Número de página", ge=1), 
+                  page_size: int = Query(10, description="Tamaño de página", ge=1, le=100)):
+    return database.get_paginated_products(page, page_size)
 
 # Consultar por id de producto
 @router.get(

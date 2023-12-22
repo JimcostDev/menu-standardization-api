@@ -34,7 +34,7 @@ Este proyecto se enfoca en desarrollar una API que permita la estandarización d
 
 - `/categories`: Obtener todas las categorías.
 - `/categories/{category_name}/products`: Obtener productos por categoría.
-- `/products`: Obtener todos los productos.
+- `/products`: Obtener todos los productos, o con parametros de paginación `products/?page=1&page_size=10`
 - `/products/{product_id}`: Obtener producto por ID.
 - `/categories/{category_id}`: Obtener categoria por ID.
 - `/categories/`: Crear una nueva categoría.

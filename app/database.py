@@ -6,6 +6,7 @@ from utils import is_valid_object_id
 from fastapi import HTTPException
 import os
 from dotenv import load_dotenv
+from typing import List
 
 # Obtiene la cadena de conexión desde config.env
 load_dotenv("config.env")
@@ -50,8 +51,15 @@ def get_categories() -> list:
 def get_category_products(category_id: str) -> list:
     return list(products_collection.find({"category_id": category_id}, {"_id": 0}))
 
-def get_products() -> list:
-    return list(products_collection.find({}, {"_id": 0}))
+# Consultar los productos con paginación
+def get_paginated_products(page: int, page_size: int) -> List[Product]:
+    # Calcular el desplazamiento (offset)
+    offset = (page - 1) * page_size
+
+    # Consultar la base de datos utilizando el offset y el tamaño de página
+    products = list(products_collection.find({}, {"_id": 0}).skip(offset).limit(page_size))
+
+    return products
 
 def get_product_by_id(product_id: str) -> dict:
     product = products_collection.find_one(
