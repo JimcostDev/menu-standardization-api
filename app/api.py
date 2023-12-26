@@ -86,6 +86,8 @@ def create_category(category: Category):
     # Realiza la validación de los campos requeridos
     if not category.name:
         raise HTTPException(status_code=400, detail="Name required")
+    if not category.image:
+        raise HTTPException(status_code=400, detail="Image required")
     
     # Validación adicional, como verificar la unicidad del nombre de categoría
     if database.category_exists(category.name):
@@ -104,13 +106,13 @@ def create_category(category: Category):
     "/products/",
     summary="Crear un nuevo producto",
     description="Este endpoint permite crear un nuevo producto en la base de datos. "
-                "Los detalles del producto, como nombre, descripción, categoría, etiquetas y precio, "
+                "Los detalles del producto, como nombre, descripción, categoría, etiquetas,precio, e imagen "
                 "deben ser proporcionados en el cuerpo de la solicitud. "
                 "Después de crear el producto con éxito, se devuelve un mensaje confirmando la creación."
 )
 def create_product(product: Product):
     # Realiza la validación de los campos requeridos
-    if not product.name or not product.description or not product.category_id or not product.tags or not product.price:
+    if not product.name or not product.description or not product.category_id or not product.tags or not product.price or not product.image:
         raise HTTPException(status_code=400, detail="All fields are required")
     
     # Validación adicional, como verificar la unicidad del nombre de categoría

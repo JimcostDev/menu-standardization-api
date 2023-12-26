@@ -16,6 +16,7 @@ class Product(BaseModel):
     
     price: float = Field(..., gt=0,
                          description="El precio del producto, debe ser mayor que 0.")
+    image: str = Field(..., description="URL de la imagen del producto")  
     
 
     @validator('tags')
@@ -31,7 +32,8 @@ class Product(BaseModel):
                 "description": "Una deliciosa torta de chocolate con capas de crema y cerezas.",
                 "category_id": "617bf036038995294e3c7c4f",
                 "tags": ["dulce", "chocolate", "sin gluten"],
-                "price": 19.99
+                "price": 19.99,
+                "image": "https://example.com/torta.jpg"
             }
         }
 
@@ -39,10 +41,12 @@ class Product(BaseModel):
 class Category(BaseModel):
     name: constr(min_length=1, max_length=100) = Field(...,
                                                        description="El nombre de la categoría.")
+    image: str = Field(..., description="URL de la imagen de la categoría")
 
     class Config:
         schema_extra = {
             "example": {
-                "name": "Postres"
+                "name": "Postres",
+                "image": "https://example.com/postres.jpg"
             }
         }
