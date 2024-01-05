@@ -138,15 +138,15 @@ def create_product(product: Product):
                 "un mensaje de confirmación. En caso de que el ID no sea válido o la categoría no se encuentre, "
                 "se retornará un error."
 )
-def update_category(category_id: str, category: Category):
+def update_category(category_id: str, updated_fields: dict):
     if not is_valid_object_id(category_id):
         raise HTTPException(status_code=400, detail="Invalid category ID")
     
-    # Realiza la validación de los campos requeridos
-    if not category.name:
-        raise HTTPException(status_code=400, detail="Name required")
+    # Verificar que se proporcionaron campos para actualizar
+    if not updated_fields:
+        raise HTTPException(status_code=400, detail="No fields to update provided")
     
-    updated = database.update_category(category_id, category)
+    updated = database.update_category(category_id, updated_fields)
     if updated:
         return {"message": "Category updated"}
     raise HTTPException(status_code=404, detail="Category not found")

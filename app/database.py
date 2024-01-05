@@ -43,13 +43,22 @@ def category_has_products(category_id: str) -> bool:
     result = products_collection.find_one({"category_id": category_id})
     return result is not None
 
+# Convierte el ObjectId a una cadena para la serialización
+def convert_ObjId_to_str(obj):
+    obj['_id'] = str(obj['_id'])
+    return obj
+
+
 # ***************** CRUD ************* #
 # GETS
 def get_categories() -> list:
-    return list(categories_collection.find({}, {"_id": 0}))
+    categories = list(categories_collection.find({}))
+    for category in categories:
+        convert_ObjId_to_str(category)  # Convierte ObjectId a cadena
+    return categories
 
 def get_category_products(category_id: str) -> list:
-    return list(products_collection.find({"category_id": category_id}, {"_id": 0}))
+    return list(products_collection.find({"category_id": category_id}))
 
 # Consultar los productos con paginación
 def get_paginated_products(page: int, page_size: int) -> List[Product]:
@@ -57,21 +66,25 @@ def get_paginated_products(page: int, page_size: int) -> List[Product]:
     offset = (page - 1) * page_size
 
     # Consultar la base de datos utilizando el offset y el tamaño de página
-    products = list(products_collection.find({}, {"_id": 0}).skip(offset).limit(page_size))
-
+    products = list(products_collection.find({}).skip(offset).limit(page_size))
+    for product in products:
+        convert_ObjId_to_str(product) # Convierte ObjectId a cadena
     return products
 
 def get_product_by_id(product_id: str) -> dict:
     product = products_collection.find_one(
-        {"_id": ObjectId(product_id)}, {"_id": 0})
+        {"_id": ObjectId(product_id)})
+    convert_ObjId_to_str(product) # Convierte ObjectId a cadena
     if product:
         return product
     return None  # Opcional: también puedes devolver un objeto vacío o lanzar una excepción
 
 def get_category_by_id(category_id: str) -> dict:
     category = categories_collection.find_one(
-        {"_id": ObjectId(category_id)}, {"_id": 0})
+        {"_id": ObjectId(category_id)})
+    convert_ObjId_to_str(category) # Convierte ObjectId a cadena
     if category:
+        print(category)
         return category
     return None  # Opcional: también puedes devolver un objeto vacío o lanzar una excepción
 
@@ -121,8 +134,7 @@ def update_product(product_id: str, updated_data: dict):
         raise HTTPException(status_code=422, detail="Update operation failed")
 
 
-def update_category(category_id: str, updated_category: Category):
-    updated_data = updated_category.dict(exclude_unset=True)
+def update_category(category_id: str, updated_data: dict):
     result = categories_collection.update_one(
         {"_id": ObjectId(category_id)}, {"$set": updated_data})
     if result.modified_count > 0:

@@ -1,8 +1,9 @@
 from pydantic import BaseModel, Field, constr, validator
 from typing import List
-
+from bson import ObjectId
 
 class Product(BaseModel):
+    _id: ObjectId 
     name: constr(min_length=1, max_length=100) = Field(...,
                                                        description="El nombre del producto.")
     description: constr(min_length=1, max_length=300) = Field(...,
@@ -28,6 +29,7 @@ class Product(BaseModel):
     class Config:
         schema_extra = {
             "example": {
+                "_id": "617bf036038995294e3c7c4f",
                 "name": "Torta de Chocolate",
                 "description": "Una deliciosa torta de chocolate con capas de crema y cerezas.",
                 "category_id": "617bf036038995294e3c7c4f",
@@ -37,8 +39,8 @@ class Product(BaseModel):
             }
         }
 
-
 class Category(BaseModel):
+    _id: ObjectId 
     name: constr(min_length=1, max_length=100) = Field(...,
                                                        description="El nombre de la categoría.")
     image: str = Field(..., description="URL de la imagen de la categoría")
@@ -46,6 +48,7 @@ class Category(BaseModel):
     class Config:
         schema_extra = {
             "example": {
+                "_id": "617bf036038995294e3c7c4f",
                 "name": "Postres",
                 "image": "https://example.com/postres.jpg"
             }
