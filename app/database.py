@@ -85,36 +85,37 @@ def get_category_by_id(category_id: str) -> dict:
 
 # CREATES
 def create_category(category: Category):
-    new_category = category.dict()
+    new_category = category.dict(exclude_unset=True)  # Excluir campos no configurados
     try:
-        # Verificar si la categoría ya existe
-        if categories_collection.find_one({"name": new_category["name"]}):
-            return None  # O manejar como prefieras
+        # Verificar si la categoría ya existe por su nombre
+        existing_category = categories_collection.find_one({"name": new_category["name"]})
+        if existing_category:
+            return None  # O manejar como prefieras si la categoría ya existe
 
         result = categories_collection.insert_one(new_category)
-        new_category_id = result.inserted_id
-        new_category["_id"] = str(new_category_id)  # Convierte ObjectId a String
-        return new_category  # Devuelve la categoría creada, incluyendo su ID como String
+        new_category_id = str(result.inserted_id)  # Obtener el ID como String
+        new_category["_id"] = new_category_id  # Agregar el ID a la categoría creada
+        return new_category  # Devuelve la categoría creada con su ID como String
     except PyMongoError as e:
         # Manejar la excepción de MongoDB
         print(f"Error al insertar categoría: {e}")
         return None
 
 def create_product(product: Product):
-    new_product = product.dict()
+    new_product = product.dict(exclude_unset=True)  # Excluir campos no configurados
     try:
-        # Verificar si producto ya existe
-        if products_collection.find_one({"name": new_product["name"]}):
-            return None  # O manejar como prefieras
-        
+        # Verificar si el producto ya existe por su nombre
+        existing_product = products_collection.find_one({"name": new_product["name"]})
+        if existing_product:
+            return None  # O manejar como prefieras si el producto ya existe
 
         result = products_collection.insert_one(new_product)
-        new_product_id = result.inserted_id
-        new_product["_id"] = str(new_product_id)  # Convierte ObjectId a String
-        return new_product  # Devuelve producto creada, incluyendo su ID como String
+        new_product_id = str(result.inserted_id)  # Obtener el ID como String
+        new_product["_id"] = new_product_id  # Agregar el ID al producto creado
+        return new_product  # Devuelve el producto creado con su ID como String
     except PyMongoError as e:
         # Manejar la excepción de MongoDB
-        print(f"Error al insertar categoría: {e}")
+        print(f"Error al insertar producto: {e}")
         return None
 
 # UPDATES
