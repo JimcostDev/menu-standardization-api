@@ -1,9 +1,8 @@
 from pydantic import BaseModel, Field, constr, validator
 from typing import List
-from bson import ObjectId
 
 class Product(BaseModel):
-    _id: ObjectId 
+    id: str = Field(..., description="ID del producto")
     name: constr(min_length=1, max_length=100) = Field(...,
                                                        description="El nombre del producto.")
     description: constr(min_length=1, max_length=300) = Field(...,
@@ -40,7 +39,7 @@ class Product(BaseModel):
         }
 
 class Category(BaseModel):
-    _id: ObjectId 
+    id: str = Field(..., description="ID de la categoría")
     name: constr(min_length=1, max_length=100) = Field(...,
                                                        description="El nombre de la categoría.")
     image: str = Field(..., description="URL de la imagen de la categoría")

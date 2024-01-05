@@ -43,22 +43,17 @@ def category_has_products(category_id: str) -> bool:
     result = products_collection.find_one({"category_id": category_id})
     return result is not None
 
-# Convierte el ObjectId a una cadena para la serialización
-def convert_ObjId_to_str(obj):
-    obj['_id'] = str(obj['_id'])
-    return obj
-
-
 # ***************** CRUD ************* #
 # GETS
 def get_categories() -> list:
     categories = list(categories_collection.find({}))
-    for category in categories:
-        convert_ObjId_to_str(category)  # Convierte ObjectId a cadena
-    return categories
+    return [Category(**{**category, "id": str(category.pop("_id"))}) for category in categories]
 
 def get_category_products(category_id: str) -> list:
-    return list(products_collection.find({"category_id": category_id}))
+    products = list(products_collection.find({"category_id": category_id}))
+    for product in products:
+        product['id'] = str(product.pop('_id')) 
+    return products
 
 # Consultar los productos con paginación
 def get_paginated_products(page: int, page_size: int) -> List[Product]:
@@ -67,26 +62,26 @@ def get_paginated_products(page: int, page_size: int) -> List[Product]:
 
     # Consultar la base de datos utilizando el offset y el tamaño de página
     products = list(products_collection.find({}).skip(offset).limit(page_size))
+    # Convertir ObjectId a cadena y ajustar nombre de campo
     for product in products:
-        convert_ObjId_to_str(product) # Convierte ObjectId a cadena
-    return products
+        product['id'] = str(product.pop('_id'))
+
+    return [Product(**product) for product in products]
 
 def get_product_by_id(product_id: str) -> dict:
-    product = products_collection.find_one(
-        {"_id": ObjectId(product_id)})
-    convert_ObjId_to_str(product) # Convierte ObjectId a cadena
+    product = products_collection.find_one({"_id": ObjectId(product_id)})
     if product:
+        product['id'] = str(product.pop('_id'))  
         return product
-    return None  # Opcional: también puedes devolver un objeto vacío o lanzar una excepción
+    return None
 
 def get_category_by_id(category_id: str) -> dict:
-    category = categories_collection.find_one(
-        {"_id": ObjectId(category_id)})
-    convert_ObjId_to_str(category) # Convierte ObjectId a cadena
+    category = categories_collection.find_one({"_id": ObjectId(category_id)})
     if category:
-        print(category)
+        category['id'] = str(category.pop('_id'))  
         return category
-    return None  # Opcional: también puedes devolver un objeto vacío o lanzar una excepción
+    return None
+
 
 # CREATES
 def create_category(category: Category):
