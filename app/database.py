@@ -3,18 +3,12 @@ from models import Product, Category, UserCreate, UserResponse
 from bson import ObjectId
 from utils import is_valid_object_id, hash_password
 from fastapi import HTTPException
-import os
-from dotenv import load_dotenv
 from typing import List
 from datetime import datetime
-from conn_db import Database
-
-# Obtener la cadena de conexión desde config.env
-load_dotenv("config.env")
-mongo_uri = os.getenv("MONGO_URI")
+from conn_db import get_database_instance
 
 # Instanciar la clase Database para manejar la conexión
-db = Database(mongo_uri)
+db = get_database_instance()
 
 # Verificar si categoria existe (insensible a mayúsculas/minúsculas)
 def category_exists(category_name: str) -> bool:

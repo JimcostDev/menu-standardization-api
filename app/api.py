@@ -6,6 +6,7 @@ from utils import is_valid_object_id
 
 router = APIRouter()
 
+""" ----------------- CATEGORIAS Y PRODUCTOS ---------------------- """
 # Consultar las categorías y sus productos
 @router.get("/categories/", response_model=List[Category],
             summary="Obtener todas las categorías",
@@ -225,7 +226,7 @@ def delete_category(category_id: str):
     raise HTTPException(status_code=404, detail="Category not found")
 
 
-""" ----------------- USERS -------------------------"""
+""" -------------------- USUARIOS ------------------------- """
 # Consultar usuario por id
 @router.get(
     "/users/{user_id}", 
