@@ -3,7 +3,11 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from api import router as api_router
 
-app = FastAPI()
+app = FastAPI(
+    title="Estandarización de Menús para Restaurantes",
+    description="Esta API ofrece operaciones CRUD (Crear, Leer, Actualizar y Eliminar) para gestionar categorías, productos y usuarios, permitiendo a los restaurantes organizar y presentar sus menús de manera eficiente.",
+    version="0.1.0"
+)
 
 # Configurar CORS (Cross-Origin Resource Sharing)
 app.add_middleware(

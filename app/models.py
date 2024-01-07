@@ -59,15 +59,34 @@ class GoogleInfo(BaseModel):
     refresh_token: str = Field(..., description="Token de actualización de Google")
     # Otros campos relevantes proporcionados por Google
 
-class UserBase(BaseModel):
-    """Base schema for User model."""
-    username: constr(min_length=4, max_length=50) = Field(..., description="Nombre de usuario (entre 4 y 50 caracteres)")
+class ResetToken(BaseModel):
+    token: str = Field(..., description="Token de reinicio para el usuario.")
+    expires_at: str = Field(..., description="Fecha de vencimiento del token de reinicio.")
 
-class UserCreate(BaseModel):
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "token": "reset_token_123",
+                "expires_at": "2025-01-01T00:00:00"
+            }
+        }
+    
+class UserBase(BaseModel):
     """Schema for creating a User."""
+    username: constr(min_length=4, max_length=50) = Field(..., description="Nombre de usuario (entre 4 y 50 caracteres)")
     email: EmailStr = Field(..., description="Dirección de correo electrónico")
     password: constr(min_length=8)
+    confirm_password: constr(min_length=8)
     avatar: HttpUrl = Field(..., description="URL de la imagen o avatar del usuario")
+    roles: List[str] = Field(default_factory=lambda: ["user"], description="Lista de roles del usuario")
+    google_info: Optional[GoogleInfo] = Field(None, description="Información opcional proporcionada por Google")
+    reset_tokens: Optional[List[ResetToken]] = Field(None, description="Tokens de reinicio para el usuario")
+    
+    @validator('confirm_password')
+    def passwords_match(cls, v, values, **kwargs):
+        if 'password' in values and v != values['password']:
+            raise ValueError('Las contraseñas no coinciden')
+        return v
     
     @validator('password')
     def validate_password(cls, v):
@@ -81,14 +100,16 @@ class UserCreate(BaseModel):
             raise ValueError('La contraseña debe contener al menos un carácter especial')
         return v
 
+class UserCreate(UserBase):
+    pass
+
 class UserResponse(BaseModel):
     """Schema for User response."""
+    id: Optional[str] = Field(None, description="ID del usuario")
     username: constr(min_length=4, max_length=50) = Field(..., description="Nombre de usuario (entre 4 y 50 caracteres)")
     email: EmailStr = Field(..., description="Dirección de correo electrónico")
-    avatar: HttpUrl = Field(..., description="URL del avatar del usuario")
-    roles: List[str] = Field(..., description="Lista de roles del usuario")
-    google_info: Optional[GoogleInfo] = Field(None, description="Información opcional proporcionada por Google")
-
+    avatar: HttpUrl = Field(..., description="URL de la imagen o avatar del usuario")
+    roles: List[str] = Field(default_factory=lambda: ["user"], description="Lista de roles del usuario")
 class UserInDB(UserResponse):
     """Schema for User stored in database."""
     created_at: str = Field(..., description="Fecha de creación del usuario")

@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, Path, Query
 from typing import List
-from models import Product, Category
+from models import Product, Category, UserCreate, UserResponse  
 import database
 from utils import is_valid_object_id
 
@@ -223,3 +223,51 @@ def delete_category(category_id: str):
     if deleted.get("message") == "Category deleted":
         return deleted
     raise HTTPException(status_code=404, detail="Category not found")
+
+
+""" ----------------- USERS -------------------------"""
+# Consultar usuario por id
+@router.get(
+    "/users/{user_id}", 
+    response_model=UserResponse,
+    summary="Consultar usuario por ID",
+    description="Este endpoint permite obtener la información detallada de un usuario específico, "
+                "identificada por su ID. Si el ID del usuario es válido y existe el usuario en la base de datos, "
+                "retorna todos sus detalles. "
+                "En caso de que el ID no sea válido o no exista, se retornará un error."
+)
+def read_user(user_id: str = Path(..., title="The ID of the user to get")):
+    if not is_valid_object_id(user_id):
+        raise HTTPException(status_code=400, detail="Invalid user ID")
+
+    user = database.get_user_by_id(user_id)
+    if user is None:
+        raise HTTPException(status_code=404, detail="User not found")
+    return user
+
+# Crear usuario
+@router.post(
+    "/users/",
+    summary="Crear un nuevo usuario",
+    description="Este endpoint permite crear un nuevo usuario en la base de datos. "
+                "La información del usuario debe ser proporcionada en el cuerpo de la solicitud. "
+                "Tras la creación exitosa, retorna un mensaje confirmando que el usuario ha sido creado."
+)
+def create_user(user: UserCreate):
+    
+    # Realiza la validación de los campos requeridos
+    if not user.email:
+        raise HTTPException(status_code=400, detail="Email required")
+    if not user.password:
+        raise HTTPException(status_code=400, detail="Password required")
+    
+    # Verificar si existe usuario
+    if database.user_exists(user.email):
+        raise HTTPException(status_code=400, detail="User already exists")
+
+    try:
+        created_user = database.create_user(user)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+    return {"message": "User created", "user": created_user}
