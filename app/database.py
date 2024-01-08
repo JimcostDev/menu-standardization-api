@@ -1,11 +1,12 @@
 from pymongo.errors import PyMongoError
-from models import Product, Category, UserCreate, UserResponse
+from models import Product, Category, UserCreate
 from bson import ObjectId
 from utils import is_valid_object_id, hash_password
-from fastapi import HTTPException
+from fastapi import HTTPException, status
 from typing import List
 from datetime import datetime
 from conn_db import get_database_instance
+import re
 
 # Instanciar la clase Database para manejar la conexión
 db = get_database_instance()
@@ -197,19 +198,38 @@ def get_user_by_id(user_id: str) -> dict:
         if user:
             user['id'] = str(user.pop('_id'))  
             return user
-        else:
-            raise HTTPException(status_code=404, detail="User not found")
     except Exception as e:
         # Manejar otros errores, como errores de conexión, etc.
         raise HTTPException(status_code=500, detail=f"Error retrieving user: {e}")
 
-# Consultar usuario por su nombre de usuario
-async def get_user_by_username(username: str) -> dict:
-    return await db.users_collection.find_one({"username": username})
-
 # Consultar usuario por su email
-async def get_user_by_email(email: str) -> dict:
-    return await db.users_collection.find_one({"email": email})
+def get_user_by_email(user_email: str) -> dict:
+    try:
+        user = db.users_collection.find_one({"email": user_email})
+        if user:
+            user['id'] = str(user.pop('_id'))  
+            return user
+    except Exception as e:
+        # Manejar otros errores, como errores de conexión, etc.
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Error retrieving user: {e}")
+
+# Consultar usuarios con usernames similares
+def get_users(user_name: str) -> list:
+    try:
+        # Crear una expresión regular para buscar usernames similares
+        regex = re.compile(f".*{re.escape(user_name)}.*", re.IGNORECASE)
+
+        # Realizar la búsqueda en la base de datos utilizando la expresión regular
+        users = list(db.users_collection.find({"username": regex}))
+
+        for user in users:
+           user['id'] = str(user.pop('_id')) 
+
+        return users
+    except Exception as e:
+        # Manejar otros errores, como errores de conexión, etc.
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Error retrieving users: {e}")
+
 
 # Actualizar usuario
 async def update_user(user_id: str, updated_data: dict) -> bool:

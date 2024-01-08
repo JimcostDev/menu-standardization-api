@@ -1,8 +1,9 @@
-from fastapi import APIRouter, HTTPException, Path, Query
+from fastapi import APIRouter, HTTPException, Path, Query, status
 from typing import List
 from models import Product, Category, UserCreate, UserResponse  
 import database
 from utils import is_valid_object_id
+from pydantic import EmailStr
 
 router = APIRouter()
 
@@ -237,18 +238,49 @@ def delete_category(category_id: str):
                 "retorna todos sus detalles. "
                 "En caso de que el ID no sea válido o no exista, se retornará un error."
 )
-def read_user(user_id: str = Path(..., title="The ID of the user to get")):
+def read_user_by_id(user_id: str = Path(..., title="The ID of the user to get")):
     if not is_valid_object_id(user_id):
         raise HTTPException(status_code=400, detail="Invalid user ID")
 
     user = database.get_user_by_id(user_id)
-    if user is None:
+    if not user:
         raise HTTPException(status_code=404, detail="User not found")
     return user
 
+# Consultar usuario por email
+@router.get(
+    "/users/by_email/{user_email}", 
+    response_model=UserResponse,
+    summary="Consultar usuario por email",
+    description="Este endpoint permite obtener la información detallada de un usuario específico, "
+                "identificada por su email. Si el email del usuario existe en la base de datos, "
+                "retorna todos sus detalles. "
+                "En caso de que el email no exista, se retornará un error."
+)
+def read_user_by_email(user_email: EmailStr):
+    user = database.get_user_by_email(user_email)
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+    return user
+
+# Consultar usuarios por nombre
+@router.get(
+    "/users/by_names/{username}", 
+    response_model=List[UserResponse],
+    summary="Consultar usuarios por su nombre",
+    description="Este endpoint permite obtener la información detallada de usuarios con nombres similares"
+                "Si el nombre del usuario existe en la base de datos, "
+                "retorna todos sus detalles por usuario. "
+)
+def read_users_by_names(username: str):
+    users= database.get_users(username)
+    if not users:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+    return users
+
 # Crear usuario
 @router.post(
-    "/users/",
+    "/users/",status_code=status.HTTP_201_CREATED,
     summary="Crear un nuevo usuario",
     description="Este endpoint permite crear un nuevo usuario en la base de datos. "
                 "La información del usuario debe ser proporcionada en el cuerpo de la solicitud. "
