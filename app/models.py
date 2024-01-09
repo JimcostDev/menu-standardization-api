@@ -51,7 +51,6 @@ class Category(BaseModel):
             }
         }
 
-
 # ------------------ USER ----------------
 class GoogleInfo(BaseModel):
     google_id: str = Field(..., description="ID proporcionado por Google")
@@ -101,7 +100,28 @@ class UserBase(BaseModel):
         return v
 
 class UserCreate(UserBase):
-    pass
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "username": "example_user",
+                "email": "user@example.com",
+                "password": "securepassword",
+                "confirm_password": "securepassword",
+                "avatar": "https://example.com/avatar.jpg"
+            }
+        }
+
+class LoginUser(BaseModel):
+    """Schema for user login."""
+    email: EmailStr
+    password: str
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "email": "user@example.com",
+                "password": "securepassword",
+            }
+        }
 
 class UserResponse(BaseModel):
     """Schema for User response."""
@@ -110,6 +130,7 @@ class UserResponse(BaseModel):
     email: EmailStr = Field(..., description="Dirección de correo electrónico")
     avatar: HttpUrl = Field(..., description="URL de la imagen o avatar del usuario")
     roles: List[str] = Field(default_factory=lambda: ["user"], description="Lista de roles del usuario")
+
 class UserInDB(UserResponse):
     """Schema for User stored in database."""
     created_at: str = Field(..., description="Fecha de creación del usuario")

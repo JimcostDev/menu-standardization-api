@@ -168,6 +168,7 @@ def create_user(user: UserCreate):
     new_user['avatar'] = str(new_user['avatar'])  # Convertir la URL a una cadena
     new_user['created_at'] = str(datetime.utcnow())
     new_user['updated_at'] = str(datetime.utcnow())
+    new_user['roles'] = ['user']
     
     # Excluir el campo 'confirm_password' antes de la inserción
     new_user.pop('confirm_password', None)

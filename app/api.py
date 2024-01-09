@@ -1,11 +1,73 @@
-from fastapi import APIRouter, HTTPException, Path, Query, status
+from fastapi import APIRouter, HTTPException, Path, Query, status, Depends
+from fastapi.security import OAuth2PasswordBearer
+from jose import JWTError, jwt
 from typing import List
-from models import Product, Category, UserCreate, UserResponse  
+from models import Product, Category, UserCreate, UserResponse, LoginUser 
 import database
-from utils import is_valid_object_id
+from utils import is_valid_object_id, verify_password
 from pydantic import EmailStr
+from datetime import datetime, timedelta
+import os
+from dotenv import load_dotenv
+
+
 
 router = APIRouter()
+
+""" -------------------- LOGIN ------------------------- """
+# Obtener secret_key
+load_dotenv("config.env")
+secret_key = os.getenv("JWT_SECRET_KEY")
+
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")  # Instancia del esquema OAuth2
+
+# Función para obtener el token JWT y verificarlo
+async def get_current_user(token: str = Depends(oauth2_scheme)):
+    try:
+        # Verificar el token aquí decodificándolo
+        payload = jwt.decode(token, secret_key, algorithms=['HS256'])
+        # Obtener el ID del usuario desde el token
+        user_id: str = payload.get("sub")
+        # Aquí deberías implementar la lógica para obtener el usuario desde la base de datos
+        user = database.get_user_by_id(user_id)
+        if user is None:
+            raise HTTPException(status_code=401, detail="Usuario no encontrado")
+        return user  # Retorna todo el objeto de usuario en lugar del ID solamente
+    except JWTError:
+        raise HTTPException(status_code=401, detail="No se pudo validar las credenciales")
+
+
+
+# Login     
+@router.post(
+    "/login",
+    summary="Iniciar sesión de usuario",
+    description="Endpoint para permitir a los usuarios iniciar sesión. Proporciona las credenciales de usuario en el cuerpo de la solicitud. "
+                "Si las credenciales son válidas, devuelve un mensaje de inicio de sesión exitoso."
+)
+async def login(user_data: LoginUser):
+    user = database.get_user_by_email(user_data.email)
+    
+    if not user:
+        raise HTTPException(status_code=401, detail="Usuario no encontrado")
+    
+    # Verificar contraseña
+    if not verify_password(user_data.password, user['password']):
+        raise HTTPException(status_code=401, detail="Contraseña incorrecta")
+    
+    # Payload del token JWT con información del usuario (puede incluir el ID, nombre, etc.)
+    token_payload = {
+        'sub': user['id'],  # ID del usuario
+        'name': user['username'],  # Nombre del usuario
+        'exp': datetime.utcnow() + timedelta(minutes=30)  # Tiempo de expiración del token (30 minutos, por ejemplo)
+    }
+    
+    
+    # Generar el token JWT
+    token = jwt.encode(token_payload, secret_key, algorithm='HS256')
+    
+    # Devolver el token en la respuesta
+    return {"message": "Inicio de sesión exitoso", "access_token": token, "token_type": "bearer"}  
 
 """ ----------------- CATEGORIAS Y PRODUCTOS ---------------------- """
 # Consultar las categorías y sus productos
@@ -238,10 +300,14 @@ def delete_category(category_id: str):
                 "retorna todos sus detalles. "
                 "En caso de que el ID no sea válido o no exista, se retornará un error."
 )
-def read_user_by_id(user_id: str = Path(..., title="The ID of the user to get")):
+def read_user_by_id(user_id: str = Path(..., title="The ID of the user to get"), current_user: UserResponse = Depends(get_current_user)):
     if not is_valid_object_id(user_id):
         raise HTTPException(status_code=400, detail="Invalid user ID")
-
+    
+    print (current_user.get("id"))
+    if current_user.get("id") != user_id:
+        raise HTTPException(status_code=403, detail="No tienes permiso para acceder a este usuario")
+        
     user = database.get_user_by_id(user_id)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
@@ -339,7 +405,7 @@ def update_user_info(
 
     raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Error desconocido")
 
-
+# Eliminar usuario
 @router.delete(
     "/users/{user_id}",
     status_code=status.HTTP_204_NO_CONTENT,
@@ -363,3 +429,4 @@ def delete_user_endpoint(user_id: str):
         raise e
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+
