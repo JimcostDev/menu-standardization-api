@@ -178,9 +178,8 @@ def create_user(user: UserCreate):
     
     try:
         # Verificar si el usuario ya existe por su email
-        existing_user = db.users_collection.find_one({"email": new_user["email"]})
-        if existing_user:
-            return None  
+        if user_exists(new_user['email']):
+            return None, status.HTTP_409_CONFLICT  # Retorna None con un código de conflicto si el usuario ya existe
 
         result = db.users_collection.insert_one(new_user)
         new_user_id = str(result.inserted_id)  # Obtener el ID como String
@@ -230,12 +229,41 @@ def get_users(user_name: str) -> list:
         # Manejar otros errores, como errores de conexión, etc.
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Error retrieving users: {e}")
 
+# Actualizar usuario    
+def update_user(user_id: str, updated_info: UserCreate):
+    existing_user = get_user_by_id(user_id)
+    
+    if existing_user is None:
+        return None, status.HTTP_404_NOT_FOUND
 
-# Actualizar usuario
-async def update_user(user_id: str, updated_data: dict) -> bool:
-    updated_data['updated_at'] = datetime.utcnow()
-    result = await db.users_collection.update_one({"_id": ObjectId(user_id)}, {"$set": updated_data})
-    return result.modified_count > 0
+    # Verificar si el email actualizado ya existe en otro usuario
+    if updated_info.email != existing_user['email']:
+        if user_exists(updated_info.email):
+            return None, status.HTTP_409_CONFLICT  # Email ya existe en otro usuario
+    
+    try:
+        updated_values = updated_info.dict(exclude_unset=True)
+        updated_values['updated_at'] = str(datetime.utcnow())
+        updated_values['avatar'] = str(updated_values['avatar'])
+        # Excluir el campo 'confirm_password' antes de la inserción
+        updated_values.pop('confirm_password', None)
+    
+        # Hashear la contraseña si se actualiza
+        if 'password' in updated_values:
+            hashed_password = hash_password(updated_values['password'])
+            updated_values['password'] = hashed_password
+
+        db.users_collection.update_one(
+            {"_id": ObjectId(user_id)},
+            {"$set": updated_values}
+        )
+
+        updated_user = get_user_by_id(user_id)
+        return updated_user, status.HTTP_200_OK
+    except PyMongoError as e:
+        print(f"Error al actualizar usuario: {e}")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Error al actualizar usuario")
+
 
 # Eliminar usuario
 async def delete_user(user_id: str) -> bool:

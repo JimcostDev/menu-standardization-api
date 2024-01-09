@@ -287,7 +287,6 @@ def read_users_by_names(username: str):
                 "Tras la creación exitosa, retorna un mensaje confirmando que el usuario ha sido creado."
 )
 def create_user(user: UserCreate):
-    
     # Realiza la validación de los campos requeridos
     if not user.email:
         raise HTTPException(status_code=400, detail="Email required")
@@ -296,7 +295,7 @@ def create_user(user: UserCreate):
     
     # Verificar si existe usuario
     if database.user_exists(user.email):
-        raise HTTPException(status_code=400, detail="User already exists")
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="User already exists")
 
     try:
         created_user = database.create_user(user)
@@ -304,3 +303,38 @@ def create_user(user: UserCreate):
         raise HTTPException(status_code=500, detail=str(e))
 
     return {"message": "User created", "user": created_user}
+
+# Actualizar usuario
+@router.put(
+    "/users/{user_id}",
+    status_code=status.HTTP_200_OK,
+    summary="Actualizar información de usuario",
+    description="Este endpoint permite actualizar la información de un usuario existente en la base de datos. "
+                "Proporciona el ID del usuario en la URL y la información actualizada en el cuerpo de la solicitud. "
+                "Si la actualización es exitosa, retorna la información actualizada del usuario."
+)
+def update_user_info(
+    user_id: str,
+    updated_info: UserCreate
+):
+    """
+    Actualiza la información de un usuario existente.
+
+    - **user_id**: El ID del usuario a actualizar.
+    - **updated_info**: La información actualizada del usuario (proporcionada en el cuerpo de la solicitud).
+    """
+    if not is_valid_object_id(user_id):
+        raise HTTPException(status_code=400, detail="Invalid user ID")
+    
+    updated_user, response_status = database.update_user(user_id, updated_info)
+
+    if response_status == status.HTTP_404_NOT_FOUND:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="El usuario no existe.")
+
+    elif response_status == status.HTTP_409_CONFLICT:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="No se pudo actualizar el usuario, el correo electrónico ya está en uso.")
+
+    elif response_status == status.HTTP_200_OK:
+        return updated_user
+
+    raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Error desconocido")
