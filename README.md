@@ -66,7 +66,7 @@ Este proyecto se centra en proporcionar una API robusta que facilite la estandar
     JWT_SECRET_KEY=your_secret_key_here
     ```
     
-5. Configura la base de datos MongoDB con las colecciones `categories`, `products`, y `users` para el correcto funcionamiento de la aplicación.
+5. Configura la base de datos MongoDB, se llama `api_menu_db` con las colecciones `categories`, `products`, y `users` para el correcto funcionamiento de la aplicación.
 
 6. Dirígete al directorio de la aplicación:
     ```
