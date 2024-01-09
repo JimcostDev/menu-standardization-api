@@ -60,7 +60,7 @@ Este proyecto se centra en proporcionar una API robusta que facilite la estandar
     pip install -r requirements.txt
     ```
 
-4. Crea un archivo llamado `config.env` en la raíz del proyecto. Este archivo se utiliza para cargar las variables de entorno necesarias para la aplicación, como la `JWT_SECRET_KEY` y `MONGO_URI`. El archivo `config.env` debe contener:
+4. Crea un archivo llamado `config.env` dentro de la carpeta `app`. Este archivo se utiliza para cargar las variables de entorno necesarias para la aplicación, como la `JWT_SECRET_KEY` y `MONGO_URI`. El archivo `config.env` debe contener:
     ```plaintext
     MONGO_URI=your_secret_key_here
     JWT_SECRET_KEY=your_secret_key_here
