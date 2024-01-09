@@ -264,11 +264,16 @@ def update_user(user_id: str, updated_info: UserCreate):
         print(f"Error al actualizar usuario: {e}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Error al actualizar usuario")
 
-
 # Eliminar usuario
-async def delete_user(user_id: str) -> bool:
-    result = await db.users_collection.delete_one({"_id": ObjectId(user_id)})
-    return result.deleted_count > 0
+def delete_user(user_id: str) -> bool:
+    try:
+        result = db.users_collection.delete_one({"_id": ObjectId(user_id)})
+        if result.deleted_count > 0:
+            return True
+        else:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No se encontró el usuario para eliminar")
+    except PyMongoError as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Error al eliminar usuario: {e}")
 
 # Cerrar la conexión
 db.close_connection()

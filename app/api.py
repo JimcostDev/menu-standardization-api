@@ -338,3 +338,28 @@ def update_user_info(
         return updated_user
 
     raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Error desconocido")
+
+
+@router.delete(
+    "/users/{user_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Eliminar usuario",
+    description="Este endpoint permite eliminar un usuario existente en la base de datos proporcionando su ID.",
+)
+def delete_user_endpoint(user_id: str):
+    """
+    Elimina un usuario existente por su ID.
+
+    - **user_id**: El ID del usuario a eliminar.
+    """
+    if not is_valid_object_id(user_id):
+        raise HTTPException(status_code=400, detail="Invalid user ID")
+    try:
+        if database.delete_user(user_id):
+            return None  # No content response on successful deletion
+        else:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No se encontró el usuario para eliminar")
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
