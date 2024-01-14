@@ -1,5 +1,5 @@
 from pymongo.errors import PyMongoError
-from models import Product, Category, UserCreate
+from models import Product, Category, UserCreate, UserUpdate
 from bson import ObjectId
 from utils import is_valid_object_id, hash_password
 from fastapi import HTTPException, status
@@ -231,7 +231,7 @@ def get_users(user_name: str) -> list:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Error retrieving users: {e}")
 
 # Actualizar usuario    
-def update_user(user_id: str, updated_info: UserCreate):
+def update_user(user_id: str, updated_info: UserUpdate):
     existing_user = get_user_by_id(user_id)
     
     if existing_user is None:
@@ -268,11 +268,26 @@ def update_user(user_id: str, updated_info: UserCreate):
 # Eliminar usuario
 def delete_user(user_id: str) -> bool:
     try:
+        # Consulta el usuario por su ID antes de eliminarlo
+        user = db.users_collection.find_one({"_id": ObjectId(user_id)})
+        
+        if not user:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No se encontró el usuario para eliminar")
+        
+        # Verifica el rol del usuario
+        user_roles = user.get("roles", [])
+        
+        if "super-admin" in user_roles:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="No se puede eliminar un usuario con rol 'super-admin', si quieres eliminar este usuario, cambia su rol.")
+        
+        # Procede con la eliminación si el rol no es 'super-admin'
         result = db.users_collection.delete_one({"_id": ObjectId(user_id)})
+        
         if result.deleted_count > 0:
             return True
         else:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No se encontró el usuario para eliminar")
+    
     except PyMongoError as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Error al eliminar usuario: {e}")
 

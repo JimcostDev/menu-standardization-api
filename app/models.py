@@ -107,7 +107,7 @@ class UserCreate(UserBase):
                 "email": "user@example.com",
                 "password": "securepassword",
                 "confirm_password": "securepassword",
-                "avatar": "https://example.com/avatar.jpg"
+                "avatar": "https://example.com/avatar.jpg",
             }
         }
 
@@ -135,3 +135,17 @@ class UserInDB(UserResponse):
     """Schema for User stored in database."""
     created_at: str = Field(..., description="Fecha de creación del usuario")
     updated_at: str = Field(..., description="Fecha de última actualización del usuario")
+
+class UserUpdate(UserBase):
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "username": "example_user",
+                "email": "user@example.com",
+                "password": "securepassword",
+                "confirm_password": "securepassword",
+                "avatar": "https://example.com/avatar.jpg",
+                "roles": ["user"]
+            }
+        }
+

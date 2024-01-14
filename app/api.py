@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, Path, Query, status, Depends
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 from typing import List
-from models import Product, Category, UserCreate, UserResponse, LoginUser 
+from models import Product, Category, UserCreate, UserResponse, LoginUser, UserUpdate
 import database
 from utils import is_valid_object_id, verify_password
 from pydantic import EmailStr
@@ -408,7 +408,7 @@ def create_user(user: UserCreate):
 )
 def update_user_info(
     user_id: str,
-    updated_info: UserCreate,
+    updated_info: UserUpdate,
     current_user: dict = Depends(check_user_role)
 ):
     """
