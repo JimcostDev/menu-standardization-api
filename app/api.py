@@ -9,6 +9,7 @@ from pydantic import EmailStr
 from datetime import datetime, timedelta
 import os
 from dotenv import load_dotenv
+from typing import Optional
 
 
 
@@ -20,6 +21,8 @@ load_dotenv("config.env")
 secret_key = os.getenv("JWT_SECRET_KEY")
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")  # Instancia del esquema OAuth2
+# Lista negra de tokens
+token_blacklist = set()
 
 # Función para obtener el token JWT y verificarlo
 async def get_current_user(token: str = Depends(oauth2_scheme)):
@@ -28,6 +31,9 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
         payload = jwt.decode(token, secret_key, algorithms=['HS256'])
         # Obtener el ID del usuario desde el token
         user_id: str = payload.get("sub")
+        # Verificar si el token está en la lista negra
+        if token in token_blacklist:
+            raise HTTPException(status_code=401, detail="Token en lista negra")
         # Aquí deberías implementar la lógica para obtener el usuario desde la base de datos
         user = database.get_user_by_id(user_id)
         if user is None:
@@ -44,7 +50,7 @@ async def check_user_role(current_user: dict = Depends(get_current_user)):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Permiso denegado. Se requiere rol de 'super-admin', 'admin' o 'user'")
     return current_user
 
-# Login     
+# Iniciar sesión (login)     
 @router.post(
     "/login",
     summary="Iniciar sesión de usuario",
@@ -74,6 +80,22 @@ async def login(user_data: LoginUser):
     
     # Devolver el token en la respuesta
     return {"message": "Inicio de sesión exitoso", "access_token": token, "token_type": "bearer"}  
+
+# Cerrar sesión (logout)
+@router.post(
+    "/logout",
+    summary="Cerrar sesión",
+    description="Endpoint para cerrar sesión. Invalida el token actual, agregándolo a la lista negra."
+)
+async def logout(
+    current_user: dict = Depends(get_current_user),
+    token: Optional[str] = Depends(oauth2_scheme)
+):
+    # Agregar el token actual a la lista negra
+    if token:
+        token_blacklist.add(token)
+    
+    return {"message": "Logout exitoso"}
 
 """ ----------------- CATEGORIAS Y PRODUCTOS ---------------------- """
 # Consultar las categorías y sus productos
