@@ -36,7 +36,11 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
     except JWTError:
         raise HTTPException(status_code=401, detail="No se pudo validar las credenciales")
 
-
+# Función de dependencia para verificar el rol del usuario
+async def check_user_role(current_user: dict = Depends(get_current_user)):
+    if "super-admin" not in current_user["roles"] and "admin" not in current_user["roles"]:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Permiso denegado. Se requiere rol de 'super-admin' o 'admin'")
+    return current_user
 
 # Login     
 @router.post(
@@ -75,7 +79,8 @@ async def login(user_data: LoginUser):
             summary="Obtener todas las categorías",
             description="Este endpoint devuelve una lista de todas las categorías disponibles.")
 def read_categories():
-    return database.get_categories()
+    categories = database.get_categories()
+    return categories
 
 
 @router.get("/categories/{category_id}/products/", response_model=List[Product],
@@ -146,7 +151,10 @@ def read_category(category_id: str = Path(..., title="The ID of the category to 
                 "Se debe proporcionar la información de la categoría en el cuerpo de la solicitud. "
                 "Tras la creación exitosa, retorna un mensaje confirmando que la categoría ha sido creada."
 )
-def create_category(category: Category):
+def create_category(category: Category, current_user: dict = Depends(check_user_role)):
+    if "super-admin" not in current_user["roles"] and "admin" not in current_user["roles"]:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Permiso denegado. Se requiere rol de 'super-admin' o 'admin'")
+    
     # Realiza la validación de los campos requeridos
     if not category.name:
         raise HTTPException(status_code=400, detail="Name required")
@@ -174,7 +182,11 @@ def create_category(category: Category):
                 "deben ser proporcionados en el cuerpo de la solicitud. "
                 "Después de crear el producto con éxito, se devuelve un mensaje confirmando la creación."
 )
-def create_product(product: Product):
+def create_product(product: Product, current_user: dict = Depends(check_user_role)):
+    # Verificar si el usuario tiene el rol necesario para crear productos
+    if "super-admin" not in current_user["roles"] and "admin" not in current_user["roles"]:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Permiso denegado. Se requiere rol de 'super-admin' o 'admin'")
+    
     # Realiza la validación de los campos requeridos
     if not product.name or not product.description or not product.category_id or not product.tags or not product.price or not product.image:
         raise HTTPException(status_code=400, detail="All fields are required")
@@ -202,7 +214,11 @@ def create_product(product: Product):
                 "un mensaje de confirmación. En caso de que el ID no sea válido o la categoría no se encuentre, "
                 "se retornará un error."
 )
-def update_category(category_id: str, updated_fields: dict):
+def update_category(category_id: str, updated_fields: dict, current_user: dict = Depends(check_user_role)):
+    # Verificar que el usuario tenga el rol necesario para actualizar categorías
+    if "super-admin" not in current_user["roles"] and "admin" not in current_user["roles"]:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Permiso denegado. Se requiere rol de 'super-admin' o 'admin'")
+    
     if not is_valid_object_id(category_id):
         raise HTTPException(status_code=400, detail="Invalid category ID")
     
@@ -234,7 +250,11 @@ def update_category(category_id: str, updated_fields: dict):
                 "```\n"
                 "Esto actualizará solo el nombre y el precio del producto sin afectar otros campos."
 )
-def update_product(product_id: str, updated_fields: dict):
+def update_product(product_id: str, updated_fields: dict, current_user: dict = Depends(check_user_role)):
+    # Verificar que el usuario tenga el rol necesario para actualizar productos
+    if "super-admin" not in current_user["roles"] and "admin" not in current_user["roles"]:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Permiso denegado. Se requiere rol de 'super-admin' o 'admin'")
+    
     if not is_valid_object_id(product_id):
         raise HTTPException(status_code=400, detail="Invalid product ID")
     
@@ -257,7 +277,11 @@ def update_product(product_id: str, updated_fields: dict):
                 "será eliminado y se retornará un mensaje de confirmación. "
                 "Si el ID no es válido o el producto no se encuentra, se retornará un error."
 )
-def delete_product(product_id: str):
+def delete_product(product_id: str, current_user: dict = Depends(check_user_role)):
+    # Verificar que el usuario tenga el rol necesario para eliminar productos
+    if "super-admin" not in current_user["roles"] and "admin" not in current_user["roles"]:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Permiso denegado. Se requiere rol de 'super-admin' o 'admin'")
+    
     if not is_valid_object_id(product_id):
         raise HTTPException(status_code=400, detail="Invalid product ID")
 
@@ -275,7 +299,10 @@ def delete_product(product_id: str):
                 "será eliminada y se retornará un mensaje de confirmación. "
                 "Si el ID no es válido o la categoría no se encuentra, se retornará un error."
 )
-def delete_category(category_id: str):
+def delete_category(category_id: str, current_user: dict = Depends(check_user_role)):
+    # Verificar que el usuario tenga el rol necesario para eliminar categorias
+    if "super-admin" not in current_user["roles"] and "admin" not in current_user["roles"]:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Permiso denegado. Se requiere rol de 'super-admin' o 'admin'")
     if not is_valid_object_id(category_id):
         raise HTTPException(status_code=400, detail="Invalid category ID")
     
@@ -300,13 +327,9 @@ def delete_category(category_id: str):
                 "retorna todos sus detalles. "
                 "En caso de que el ID no sea válido o no exista, se retornará un error."
 )
-def read_user_by_id(user_id: str = Path(..., title="The ID of the user to get"), current_user: UserResponse = Depends(get_current_user)):
+def read_user_by_id(user_id: str = Path(..., title="The ID of the user to get")):
     if not is_valid_object_id(user_id):
         raise HTTPException(status_code=400, detail="Invalid user ID")
-    
-    print (current_user.get("id"))
-    if current_user.get("id") != user_id:
-        raise HTTPException(status_code=403, detail="No tienes permiso para acceder a este usuario")
         
     user = database.get_user_by_id(user_id)
     if not user:
@@ -381,7 +404,8 @@ def create_user(user: UserCreate):
 )
 def update_user_info(
     user_id: str,
-    updated_info: UserCreate
+    updated_info: UserCreate,
+    current_user: dict = Depends(check_user_role)
 ):
     """
     Actualiza la información de un usuario existente.
@@ -389,6 +413,10 @@ def update_user_info(
     - **user_id**: El ID del usuario a actualizar.
     - **updated_info**: La información actualizada del usuario (proporcionada en el cuerpo de la solicitud).
     """
+    # Verificar que el usuario tenga el rol necesario para actualizar información de usuarios
+    if "super-admin" not in current_user["roles"]:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Permiso denegado. Se requiere rol de 'super-admin'")
+    
     if not is_valid_object_id(user_id):
         raise HTTPException(status_code=400, detail="Invalid user ID")
     
@@ -412,12 +440,16 @@ def update_user_info(
     summary="Eliminar usuario",
     description="Este endpoint permite eliminar un usuario existente en la base de datos proporcionando su ID.",
 )
-def delete_user_endpoint(user_id: str):
+def delete_user_endpoint(user_id: str, current_user: dict = Depends(check_user_role)):
     """
     Elimina un usuario existente por su ID.
 
     - **user_id**: El ID del usuario a eliminar.
     """
+    # Verificar que el usuario tenga el rol necesario para eliminar usuarios
+    if "super-admin" not in current_user["roles"]:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Permiso denegado. Se requiere rol de 'super-admin'")
+    
     if not is_valid_object_id(user_id):
         raise HTTPException(status_code=400, detail="Invalid user ID")
     try:
