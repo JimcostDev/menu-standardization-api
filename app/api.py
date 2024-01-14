@@ -38,8 +38,10 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
 
 # Función de dependencia para verificar el rol del usuario
 async def check_user_role(current_user: dict = Depends(get_current_user)):
-    if "super-admin" not in current_user["roles"] and "admin" not in current_user["roles"]:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Permiso denegado. Se requiere rol de 'super-admin' o 'admin'")
+    # Verificar que el usuario tenga el rol necesario para consultar usuarios por email
+    allowed_roles = ['super-admin', 'admin', 'user']
+    if not any(role in allowed_roles for role in current_user["roles"]):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Permiso denegado. Se requiere rol de 'super-admin', 'admin' o 'user'")
     return current_user
 
 # Login     
@@ -340,6 +342,7 @@ def read_user_by_id(user_id: str = Path(..., title="The ID of the user to get"))
 @router.get(
     "/users/by_email/{user_email}", 
     response_model=UserResponse,
+    dependencies=[Depends(check_user_role)],
     summary="Consultar usuario por email",
     description="Este endpoint permite obtener la información detallada de un usuario específico, "
                 "identificada por su email. Si el email del usuario existe en la base de datos, "
@@ -357,6 +360,7 @@ def read_user_by_email(user_email: EmailStr):
     "/users/by_names/{username}", 
     response_model=List[UserResponse],
     summary="Consultar usuarios por su nombre",
+    dependencies=[Depends(check_user_role)],
     description="Este endpoint permite obtener la información detallada de usuarios con nombres similares"
                 "Si el nombre del usuario existe en la base de datos, "
                 "retorna todos sus detalles por usuario. "
